@@ -26,6 +26,7 @@ class SimpleSnapp extends SmartContract {
   }
 }
 
+
 await isReady;
 
 const Local = Mina.LocalBlockchain();
@@ -41,8 +42,10 @@ await Mina.transaction(account1, async () => {
   let snapp = new SimpleSnapp(snappPubKey);
 
   const amount = UInt64.fromNumber(1000000);
-  const p = await Party.createSigned(account2);
-  p.balance.subInPlace(amount);
+  // const p = await Party.createSigned(account2);
+  // p.balance.subInPlace(amount);
+
+  Mina.currentTransaction!.feePayerBalance.subInPlace(amount);
 
   snapp.deploy(amount, Field(1));
 })

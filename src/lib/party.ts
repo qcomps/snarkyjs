@@ -717,6 +717,10 @@ export class PartyBalance {
   subInPlace(x: Int64 | UInt32 | UInt64) {
     this.body.delta = this.body.delta.sub(x);
   }
+
+  getValue() {
+    return this.body.delta;
+  }
 }
 
 export class Party<P> {

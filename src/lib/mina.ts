@@ -11,11 +11,13 @@ import {
   PartyBody as SnarkyBody,
   Party_ as SnarkyParty,
 } from '../snarky';
-import { UInt32, UInt64 } from './int';
+import { Int64, UInt32, UInt64 } from './int';
 import { PrivateKey, PublicKey } from './signature';
 import {
   Body,
   EpochDataPredicate,
+  Party,
+  PartyBalance,
   ProtocolStatePredicate,
 } from './party';
 
@@ -47,6 +49,7 @@ export let currentTransaction:
       parties: Array<{ body: Body; predicate: PartyPredicate }>;
       nextPartyIndex: number;
       protocolState: ProtocolStatePredicate;
+      feePayerBalance: PartyBalance
     }
   | undefined = undefined;
 
@@ -147,11 +150,14 @@ export const LocalBlockchain: () => MockMina = () => {
       );
     }
 
+    const senderPubkey = sender.toPublicKey();
+
     currentTransaction = {
       sender,
       parties: [],
       nextPartyIndex: 0,
       protocolState: ProtocolStatePredicate.ignoreAll(),
+      feePayerBalance: new PartyBalance(Body.keepAll(senderPubkey))
     };
 
     const result = Circuit.runAndCheck(() => {
@@ -170,7 +176,7 @@ export const LocalBlockchain: () => MockMina = () => {
       throw err;
     });
 
-    const senderPubkey = sender.toPublicKey();
+    
     const txn = result
       .then(() => getAccount(senderPubkey))
       .then((senderAccount) => {
@@ -200,6 +206,7 @@ export const LocalBlockchain: () => MockMina = () => {
           body: body(Body.keepAll(senderPubkey)),
           predicate: senderAccount.nonce,
         };
+        feePayer.body.delta = currentTransaction.feePayerBalance.getValue();
 
         const ps = currentTransaction.protocolState;
 
